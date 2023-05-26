@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token Staking DApp</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="./app.js"></script>
+</head>
+<body>
+    <h1>Token Staking DApp</h1>
+
+    <div>
+        <h2>Connected Account: <span id="account"></span></h2>
+        <h3>Token Balance: <span id="balance"></span></h3>
+        <h3>Staking Rewards: <span id="rewards"></span></h3>
+        <input type="number" id="amount" placeholder="Amount" />
+        <button onclick="mintTokens()">Mint Tokens</button>
+        <button onclick="stakeTokens()">Stake Tokens</button>
+        <button onclick="unstakeTokens()">Unstake Tokens</button>
+        <button onclick="claimRewards()">Claim Rewards</button>
+    </div>
+
+    <script>
+        // Update the contract address and ABI
+        const contractAddress = 'CONTRACT_ADDRESS';
+        const contractABI = [
+            // Contract ABI here
+        ];
+
+        let web3;
+        let contractInstance;
+
+        async function connectMetamask() {
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    web3 = new Web3(window.ethereum);
+                    contractInstance = new web3.eth.Contract(contractABI, contractAddress);
+                    updateAccount();
+                    updateBalance();
+                    updateRewards();
+                } catch (error) {
+                    console.error(error);
+                }
+            } else {
+                alert('Please install MetaMask to use this DApp.');
+            }
+        }
+
+        async function updateAccount() {
+            const accounts = await web3.eth.getAccounts();
+            document.getElementById('account').textContent = accounts[0];
+        }
+
+        async function updateBalance() {
+            const accounts = await web3.eth.getAccounts();
+            const balance = await contractInstance.methods.balanceOf(accounts[0]).call();
+            document.getElementById('balance').textContent = balance;
+        }
+
+        async function updateRewards() {
+            const accounts = await web3.eth.getAccounts();
+            const rewards = await contractInstance.methods.rewards(accounts[0]).call();
+            document.getElementById('rewards').textContent = rewards;
+        }
+
+        async function mintTokens() {
+            const amount = document.getElementById('amount').value;
+            await contractInstance.methods.mint(amount).send({ from: web3.eth.defaultAccount });
+            updateBalance();
+        }
+
+        async function stakeTokens() {
+            const amount = document.getElementById('amount').value;
+            await contractInstance.methods.stake(amount).send({ from: web3.eth.defaultAccount });
+            updateBalance();
+            updateRewards();
+        }
+
+        async function unstakeTokens() {
+            const amount = document.getElementById('amount').value;
+            await contractInstance.methods.unstake(amount).send({ from: web3.eth.defaultAccount });
+            updateBalance();
+            updateRewards();
+        }
+
+        async function claimRewards() {
+            await contractInstance.methods.claimRewards().send({ from: web3.eth.defaultAccount });
+            updateRewards();
+        }
+
+        connectMetamask();
+    </script>
+</body>
+</html>
